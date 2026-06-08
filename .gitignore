@@ -1,0 +1,16 @@
+# Python cache/build artifacts
+__pycache__/
+*.py[cod]
+.ipynb_checkpoints/
+
+# Generated experiment outputs
+outputs/
+
+# Large/local model assets that exceed GitHub's file-size limit
+body_models/
+external/EDGE/checkpoint.pt
+
+# Vendored third-party repositories; install or clone them separately.
+external/EDGE/
+external/SMPLSim/
+external/mujoco_menagerie/

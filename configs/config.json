@@ -1,0 +1,23 @@
+{
+    "edge_env": "edge",
+    "sim_env": "sim",
+    "smpl_model_path": "body_models/smpl/SMPL_NEUTRAL.pkl",
+    "edge_checkpoint": "external/EDGE/checkpoints/train-6000.pt",
+    "smplsim_path": "external/SMPLSim",
+    "gmr_path": "external/GMR",
+    "music_dir": "music",
+    "output_dir": "outputs",
+    "fps": 30,
+    "clip_length_sec": 5,
+    "overlap_sec": 1,
+    "pd_control": {
+        "kp_default": 1000.0,
+        "kd_default": 100.0,
+        "torque_limit": 500.0
+    },
+    "evaluation": {
+        "fall_height_threshold": 0.3,
+        "beat_sigma": 0.1
+    },
+    "genres": ["hiphop", "ballet", "house", "waltz", "lyrical"]
+}
