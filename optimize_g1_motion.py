@@ -1,0 +1,67 @@
+"""Optimize a retargeted G1 dance trajectory before MuJoCo rollout.
+
+Stage 1 of the long-term pipeline: build the v2 retargeting initial guess, apply
+offline robot constraints, then save an optimized reference trajectory as NPZ.
+"""
+from __future__ import annotations
+
+import argparse
+import json
+import os
+
+import mujoco
+import numpy as np
+
+from motion_constraints import optimize_qpos_offline
+from retarget_smpl_to_g1 import G1_XML, load_motion
+from retarget_v2 import build_qpos_trajectory
+
+
+OUT_DIR = "/Users/lucy_lzh/dance_project/optimized_motions"
+
+
+def infer_fps(path: str, explicit: float) -> float:
+    if explicit > 0:
+        return explicit
+    return 30.0 if "generated_motions" in path else 60.0
+
+
+def main():
+    parser = argparse.ArgumentParser(description="Offline-optimize a G1 qpos trajectory")
+    parser.add_argument("motion", help="Input SMPL motion pkl")
+    parser.add_argument("--fps", type=float, default=0, help="Input motion fps")
+    parser.add_argument("--out", help="Output .npz path")
+    args = parser.parse_args()
+
+    fps = infer_fps(args.motion, args.fps)
+    stem = os.path.splitext(os.path.basename(args.motion))[0]
+    os.makedirs(OUT_DIR, exist_ok=True)
+    out_path = args.out or os.path.join(OUT_DIR, f"{stem}_optimized.npz")
+
+    print(f"Loading {args.motion}  fps={fps:g}")
+    poses, trans = load_motion(args.motion)
+    model = mujoco.MjModel.from_xml_path(G1_XML)
+    data = mujoco.MjData(model)
+
+    print("Building v2 retargeting initial guess ...")
+    qpos_init = build_qpos_trajectory(model, data, poses, trans)
+
+    print("Applying offline robot constraints ...")
+    qpos_ref, contacts, report = optimize_qpos_offline(model, qpos_init, fps)
+
+    np.savez_compressed(
+        out_path,
+        qpos_ref=qpos_ref.astype(np.float32),
+        qpos_init=qpos_init.astype(np.float32),
+        fps=np.array([fps], dtype=np.float32),
+        left_contact=contacts["left"],
+        right_contact=contacts["right"],
+        source=np.array([args.motion]),
+    )
+
+    print(f"Wrote {out_path}")
+    print(json.dumps(report.__dict__, indent=2, ensure_ascii=False))
+
+
+if __name__ == "__main__":
+    main()
