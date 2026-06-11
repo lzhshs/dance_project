@@ -2,6 +2,7 @@
 import pickle, numpy as np, mujoco, imageio.v2 as imageio
 from scipy.spatial.transform import Rotation as R
 from retarget_smpl_to_g1 import load_motion, smpl_to_g1_qpos, G1_XML, SMPL_PKL
+from project_paths import PROJECT_ROOT
 
 model = mujoco.MjModel.from_xml_path(G1_XML)
 data  = mujoco.MjData(model)
@@ -28,5 +29,5 @@ cam.elevation = -15
 renderer = mujoco.Renderer(model, height=480, width=640)
 renderer.update_scene(data, camera=cam)
 img = renderer.render()
-imageio.imwrite("/Users/lucy_lzh/dance_project/debug_frame.png", img)
+imageio.imwrite(str(PROJECT_ROOT / "debug_frame.png"), img)
 print("Saved debug_frame.png")

@@ -21,7 +21,9 @@ from motion_constraints import actuator_qpos_addresses, joint_addresses
 from retarget_smpl_to_g1 import G1_XML
 
 
-OUT_DIR = "/Users/lucy_lzh/dance_project/videos"
+from project_paths import VIDEOS_DIR
+
+OUT_DIR = str(VIDEOS_DIR)
 LEFT_FOOT_BODY = "left_ankle_roll_link"
 RIGHT_FOOT_BODY = "right_ankle_roll_link"
 PELVIS_BODY = "pelvis"

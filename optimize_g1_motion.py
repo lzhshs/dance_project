@@ -17,7 +17,9 @@ from retarget_smpl_to_g1 import G1_XML, load_motion
 from retarget_v2 import build_qpos_trajectory
 
 
-OUT_DIR = "/Users/lucy_lzh/dance_project/optimized_motions"
+from project_paths import OPTIMIZED_MOTIONS_DIR
+
+OUT_DIR = str(OPTIMIZED_MOTIONS_DIR)
 
 
 def infer_fps(path: str, explicit: float) -> float:

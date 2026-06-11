@@ -21,7 +21,9 @@ from retarget_smpl_to_g1 import G1_XML
 from rollout_optimize import FALL_PELVIS_Z, interp_qpos
 
 
-OUT_DIR = "/Users/lucy_lzh/dance_project/optimized_motions"
+from project_paths import OPTIMIZED_MOTIONS_DIR
+
+OUT_DIR = str(OPTIMIZED_MOTIONS_DIR)
 
 
 @dataclass(frozen=True)

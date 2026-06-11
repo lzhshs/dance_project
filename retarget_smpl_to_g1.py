@@ -43,9 +43,10 @@ import mujoco
 import imageio.v2 as imageio
 from scipy.spatial.transform import Rotation as R
 
-DEFAULT_PKL = "/Users/lucy_lzh/dance_project/aist_data/motions/gBR_sBM_cAll_d04_mBR0_ch01.pkl"
-G1_XML = "/Users/lucy_lzh/dance_project/mujoco_menagerie/unitree_g1/scene.xml"
-OUT_DIR = "/Users/lucy_lzh/dance_project/videos"
+from project_paths import AIST_MOTIONS_DIR, G1_XML, VIDEOS_DIR
+
+DEFAULT_PKL = str(AIST_MOTIONS_DIR / "gBR_sBM_cAll_d04_mBR0_ch01.pkl")
+OUT_DIR = str(VIDEOS_DIR)
 SMPL_PKL = sys.argv[1] if len(sys.argv) > 1 else DEFAULT_PKL
 OUT_MP4 = os.path.join(OUT_DIR,
                        os.path.splitext(os.path.basename(SMPL_PKL))[0] + ".mp4")

@@ -23,7 +23,9 @@ from scipy.spatial.transform import Rotation as R
 from retarget_smpl_to_g1 import G1_XML, load_motion
 from smpl_fk import fk
 
-OUT_DIR = "/Users/lucy_lzh/dance_project/videos"
+from project_paths import AIST_MOTIONS_DIR, VIDEOS_DIR
+
+OUT_DIR = str(VIDEOS_DIR)
 os.makedirs(OUT_DIR, exist_ok=True)
 
 # Y-up SMPL -> Z-up MuJoCo
@@ -224,7 +226,7 @@ def main():
         if a.startswith("--fps="):
             fps = int(a.split("=", 1)[1])
     pkl = args[0] if args else \
-        "/Users/lucy_lzh/dance_project/aist_data/motions/gPO_sFM_cAll_d10_mPO1_ch02.pkl"
+        str(AIST_MOTIONS_DIR / "gPO_sFM_cAll_d10_mPO1_ch02.pkl")
     # Heuristic: EDGE pkls live in generated_motions/ and are 30 fps.
     if "generated_motions" in pkl and "--fps=" not in " ".join(sys.argv):
         fps = 30

@@ -1,0 +1,14 @@
+# Core runtime for the root G1 dance reproducibility pipeline.
+# Tested locally with Python 3.10 and the versions in REPRODUCIBILITY.md.
+numpy>=1.26,<3
+scipy>=1.11
+mujoco>=3.2
+imageio>=2.31
+imageio-ffmpeg>=0.4.9
+matplotlib>=3.8
+librosa>=0.10
+soundfile>=0.12
+torch>=2.1
+einops>=0.7
+tqdm>=4.66
+wandb>=0.16

@@ -13,7 +13,9 @@ import sys
 import imageio_ffmpeg
 
 FFMPEG = imageio_ffmpeg.get_ffmpeg_exe()
-MUSIC_DIR = "/Users/lucy_lzh/dance_project/aist_data/music"
+from project_paths import AIST_MUSIC_DIR
+
+MUSIC_DIR = str(AIST_MUSIC_DIR)
 
 
 def main():

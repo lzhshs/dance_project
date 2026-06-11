@@ -1,0 +1,147 @@
+# G1 Music-to-Dance Retargeting
+
+This repository reproduces a pipeline that turns music-conditioned SMPL dance
+motion into Unitree G1 robot motions in MuJoCo. The workflow combines EDGE for
+music-to-SMPL generation, custom SMPL-to-G1 retargeting, offline feasibility
+filters, MuJoCo PD tracking, and final quantitative evaluation.
+
+## What is in this repo
+
+- `edge_infer.py`: run EDGE sampling from precomputed Jukebox features and write
+  `generated_motions/<song>.pkl`.
+- `retarget_smpl_to_g1.py`: baseline Euler retargeting from SMPL to G1 qpos.
+- `retarget_v2.py`: improved lower-body retargeting plus IK-style arm mapping.
+- `optimize_g1_motion.py`: offline filtering and joint/contact constraints.
+- `robot_feasibility_optimize.py`: search for a free-root, dynamically feasible
+  reference with higher expressiveness than the conservative fallback.
+- `support_com_optimize.py`: final support/COM-aware feasibility optimizer.
+- `pd_track.py`: MuJoCo PD rollout and video rendering.
+- `evaluate.py` and `final_evaluate.py`: beat alignment, joint-limit, stability,
+  tracking, and summary plot/CSV generation.
+- `project_paths.py`: all root-relative paths used by the scripts.
+- `mujoco_menagerie/unitree_g1/`: Unitree G1 MuJoCo model used by the pipeline.
+
+Generated artifacts are written to:
+
+- `generated_motions/`: EDGE/SMPL `.pkl` motions.
+- `optimized_motions/`: optimized G1 `.npz` references.
+- `videos/`: MuJoCo renderings and audio-muxed demos.
+- `reports/final/`: CSV metrics, plots, and final report assets.
+
+## Setup
+
+Use Python 3.10 or newer. On a fresh checkout:
+
+```bash
+git submodule update --init --recursive
+python3 -m venv .venv
+source .venv/bin/activate
+python -m pip install --upgrade pip
+pip install -r requirements.txt
+```
+
+The root repo includes small local compatibility shims for `accelerate`,
+`p_tqdm`, and `pytorch3d.transforms` so local EDGE inference can run on machines
+where the full upstream packages are not installed.
+
+## External artifacts
+
+Large files are intentionally not tracked in git. To fully reproduce from audio,
+prepare these files:
+
+- `EDGE/checkpoint.pt`: EDGE pretrained checkpoint.
+- `cached_features/<song>/*.wav` and `cached_features/<song>/*.npy`, or the same
+  folder under `EDGE/cached_features/<song>/`: Jukebox features for EDGE. Each
+  `.npy` slice should have shape `(150, 4800)`.
+- `aist_data/motions/*.pkl`: optional AIST++ SMPL motions for baseline tests.
+- `aist_data/music/*.wav`: optional AIST++ music files for audio muxing and beat
+  alignment.
+- `pop.wav`: music used by the included final-project `pop` example.
+
+If you only want to reproduce the final reported `pop` evaluation from existing
+artifacts, the key inputs are `generated_motions/pop.pkl`, `pop.wav`, and the
+`.npz` files under `optimized_motions/`.
+
+## Quick reproduction: final `pop` metrics
+
+Run the final evaluation table and stability plot:
+
+```bash
+python final_evaluate.py --motion generated_motions/pop.pkl --wav pop.wav --fps 30 --max-seconds 10
+```
+
+Expected outputs:
+
+- `reports/final/final_metrics.csv`
+- `reports/final/final_metrics_summary.md`
+- `reports/final/figures/final_stability_curve.pdf`
+- `reports/final/figures/final_stability_curve.png`
+
+The currently checked generated summary reports that direct retargeting falls at
+about 1.18 s, while the balance-safe, feasibility-optimized, and support/COM-aware
+references remain stable for the 10 s evaluation window.
+
+## Full pipeline from cached audio features
+
+Assume the song is named `pop` and Jukebox feature slices are available under
+`cached_features/pop/` or `EDGE/cached_features/pop/`.
+
+```bash
+# 1. EDGE audio-conditioned SMPL generation.
+python edge_infer.py pop --seed 7
+
+# 2. Optional kinematic visualization of the raw retargeting.
+python retarget_v2.py generated_motions/pop.pkl --fps=30
+
+# 3. Offline robot filtering.
+python optimize_g1_motion.py generated_motions/pop.pkl --fps 30
+
+# 4. Conservative stable fallback and feasibility-optimized references.
+python make_balance_safe.py optimized_motions/pop_optimized.npz
+python robot_feasibility_optimize.py optimized_motions/pop_optimized.npz --samples 90 --seed 7 --max-seconds 10
+python support_com_optimize.py optimized_motions/pop_optimized.npz --samples 160 --seed 11 --max-seconds 10
+
+# 5. Render PD rollouts.
+python pd_track.py optimized_motions/pop_balance_safe.npz
+python pd_track.py optimized_motions/pop_feasible.npz
+python pd_track.py optimized_motions/pop_support_com.npz
+
+# 6. Add audio to a rendered video.
+python add_audio.py videos/pop_support_com_pd.mp4 pop.wav
+
+# 7. Recompute final metrics.
+python final_evaluate.py --motion generated_motions/pop.pkl --wav pop.wav --fps 30 --max-seconds 10
+```
+
+For a pinned-root showcase video, use:
+
+```bash
+python make_showcase_motion.py optimized_motions/pop_optimized.npz --style expressive
+python pd_track.py optimized_motions/pop_showcase_expressive.npz --pin-root
+python add_audio.py videos/pop_showcase_expressive_pd_pinned.mp4 pop.wav
+```
+
+## AIST++ motion baseline
+
+For a raw AIST++ SMPL `.pkl` motion, use 60 fps unless you know otherwise:
+
+```bash
+python retarget_v2.py aist_data/motions/gPO_sFM_cAll_d10_mPO1_ch02.pkl --fps=60
+python pd_track.py aist_data/motions/gPO_sFM_cAll_d10_mPO1_ch02.pkl --fps 60 --pin-root
+python evaluate.py aist_data/motions/gPO_sFM_cAll_d10_mPO1_ch02.pkl --wav aist_data/music/mPO1.wav --fps 60
+```
+
+## Reproducibility notes
+
+- Paths are root-relative through `project_paths.py`; the repo no longer depends
+  on a user-specific absolute path.
+- EDGE generation is stochastic; use `--seed` for repeatable sampling. Existing
+  `.pkl` and `.npz` artifacts are the most reliable way to reproduce the exact
+  final report numbers.
+- MuJoCo free-root stability can vary slightly across MuJoCo, Python, and BLAS
+  versions. Compare stability rates and fall times with a small tolerance.
+- Rendering requires a working OpenGL context. On headless Linux, set an
+  appropriate MuJoCo backend such as `MUJOCO_GL=egl` before running render-heavy
+  scripts.
+
+See `REPRODUCIBILITY.md` for an exact command log and expected metrics.

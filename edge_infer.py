@@ -19,9 +19,12 @@ Workflow:
        python pd_track.py  generated_motions/<song>.pkl --pin-root
 """
 import glob
+import argparse
 import os
 import pickle
+import random
 import sys
+import tempfile
 import types
 from functools import cmp_to_key
 
@@ -32,13 +35,16 @@ import numpy as np
 import torch
 from scipy.spatial.transform import Rotation as R
 
-EDGE_DIR = "/Users/lucy_lzh/dance_project/EDGE"
+from project_paths import EDGE_DIR, GENERATED_MOTIONS_DIR, PROJECT_ROOT
+
+EDGE_DIR = str(EDGE_DIR)
+OUT_DIR = str(GENERATED_MOTIONS_DIR)
+os.environ.setdefault("MPLCONFIGDIR", os.path.join(tempfile.gettempdir(), "matplotlib_cache"))
 sys.path.insert(0, EDGE_DIR)
 
 from EDGE import EDGE  # noqa: E402
 from pytorch3d.transforms import axis_angle_to_matrix, matrix_to_axis_angle  # noqa
 
-OUT_DIR = "/Users/lucy_lzh/dance_project/generated_motions"
 os.makedirs(OUT_DIR, exist_ok=True)
 
 # EDGE trains/samples in a Z-up coordinate frame: AIST Y-up motions are rotated
@@ -65,12 +71,21 @@ SORT_KEY = cmp_to_key(_cmp)
 
 
 def main():
-    if len(sys.argv) < 2:
-        print("Usage: python edge_infer.py <song_name>")
-        print("  where EDGE/cached_features/<song_name>/ contains *.wav and *.npy")
-        sys.exit(1)
-    song = sys.argv[1]
+    parser = argparse.ArgumentParser(description="Run local EDGE inference from cached Jukebox features")
+    parser.add_argument("song_name", help="Folder name under cached_features/ or EDGE/cached_features/")
+    parser.add_argument("--seed", type=int, default=7, help="Random seed for diffusion sampling")
+    args = parser.parse_args()
+
+    random.seed(args.seed)
+    np.random.seed(args.seed)
+    torch.manual_seed(args.seed)
+    if torch.cuda.is_available():
+        torch.cuda.manual_seed_all(args.seed)
+
+    song = args.song_name
     feat_dir = os.path.join(EDGE_DIR, "cached_features", song)
+    if not os.path.isdir(feat_dir):
+        feat_dir = os.path.join(PROJECT_ROOT, "cached_features", song)
     if not os.path.isdir(feat_dir):
         print(f"No such dir: {feat_dir}")
         sys.exit(1)

@@ -18,7 +18,9 @@ from motion_constraints import actuator_qpos_addresses, joint_addresses, moving_
 from retarget_smpl_to_g1 import G1_XML
 
 
-OUT_DIR = "/Users/lucy_lzh/dance_project/optimized_motions"
+from project_paths import OPTIMIZED_MOTIONS_DIR
+
+OUT_DIR = str(OPTIMIZED_MOTIONS_DIR)
 FALL_PELVIS_Z = 0.35
 
 

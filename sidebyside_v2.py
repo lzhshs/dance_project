@@ -15,7 +15,9 @@ from retarget_v2 import build_qpos_trajectory
 from smpl_fk import EDGES, fk
 from sidebyside import render_smpl_frame
 
-OUT_DIR = "/Users/lucy_lzh/dance_project/videos"
+from project_paths import VIDEOS_DIR
+
+OUT_DIR = str(VIDEOS_DIR)
 W = H = 480
 
 

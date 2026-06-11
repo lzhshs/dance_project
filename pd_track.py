@@ -25,7 +25,9 @@ import numpy as np
 from retarget_smpl_to_g1 import G1_XML, load_motion
 from retarget_v2 import build_qpos_trajectory
 
-OUT_DIR = "/Users/lucy_lzh/dance_project/videos"
+from project_paths import AIST_MOTIONS_DIR, VIDEOS_DIR
+
+OUT_DIR = str(VIDEOS_DIR)
 os.makedirs(OUT_DIR, exist_ok=True)
 
 MOTION_FPS = 60.0       # AIST++ is 60 fps; EDGE outputs 30 fps (override via --fps)
@@ -47,7 +49,7 @@ def main():
     global MOTION_FPS
     parser = argparse.ArgumentParser(description="PD-track a G1 reference trajectory")
     parser.add_argument("input", nargs="?",
-                        default="/Users/lucy_lzh/dance_project/aist_data/motions/gPO_sFM_cAll_d10_mPO1_ch02.pkl",
+                        default=str(AIST_MOTIONS_DIR / "gPO_sFM_cAll_d10_mPO1_ch02.pkl"),
                         help="SMPL .pkl motion or optimized .npz reference")
     parser.add_argument("--ref", help="Optimized .npz reference; overrides input")
     parser.add_argument("--fps", type=float, default=0, help="Reference FPS")

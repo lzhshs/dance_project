@@ -17,7 +17,9 @@ from mpl_toolkits.mplot3d import Axes3D  # noqa: F401
 from retarget_smpl_to_g1 import G1_XML, load_motion, smpl_to_g1_qpos
 from smpl_fk import EDGES, fk
 
-OUT_DIR = "/Users/lucy_lzh/dance_project/videos"
+from project_paths import VIDEOS_DIR
+
+OUT_DIR = str(VIDEOS_DIR)
 os.makedirs(OUT_DIR, exist_ok=True)
 
 W = H = 480  # each panel square
