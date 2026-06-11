@@ -22,6 +22,24 @@ from project_paths import OPTIMIZED_MOTIONS_DIR
 OUT_DIR = str(OPTIMIZED_MOTIONS_DIR)
 
 
+def build_parser() -> argparse.ArgumentParser:
+    parser = argparse.ArgumentParser(description="Offline-optimize a G1 qpos trajectory")
+    parser.add_argument("motion", help="Input SMPL motion pkl")
+    parser.add_argument("--fps", type=float, default=0, help="Input motion fps")
+    parser.add_argument("--out", help="Output .npz path")
+    parser.add_argument(
+        "--profile",
+        choices=["safe", "expressive", "balance", "showcase"],
+        default="safe",
+        help=(
+            "Constraint profile: safe preserves previous behavior; expressive "
+            "keeps more torso/arm motion; balance favors free-root stability; "
+            "showcase emphasizes upper-body motion for pinned-root demos"
+        ),
+    )
+    return parser
+
+
 def infer_fps(path: str, explicit: float) -> float:
     if explicit > 0:
         return explicit
@@ -29,10 +47,7 @@ def infer_fps(path: str, explicit: float) -> float:
 
 
 def main():
-    parser = argparse.ArgumentParser(description="Offline-optimize a G1 qpos trajectory")
-    parser.add_argument("motion", help="Input SMPL motion pkl")
-    parser.add_argument("--fps", type=float, default=0, help="Input motion fps")
-    parser.add_argument("--out", help="Output .npz path")
+    parser = build_parser()
     args = parser.parse_args()
 
     fps = infer_fps(args.motion, args.fps)
@@ -48,8 +63,8 @@ def main():
     print("Building v2 retargeting initial guess ...")
     qpos_init = build_qpos_trajectory(model, data, poses, trans)
 
-    print("Applying offline robot constraints ...")
-    qpos_ref, contacts, report = optimize_qpos_offline(model, qpos_init, fps)
+    print(f"Applying offline robot constraints ({args.profile}) ...")
+    qpos_ref, contacts, report = optimize_qpos_offline(model, qpos_init, fps, profile=args.profile)
 
     np.savez_compressed(
         out_path,
@@ -59,6 +74,7 @@ def main():
         left_contact=contacts["left"],
         right_contact=contacts["right"],
         source=np.array([args.motion]),
+        profile=np.array([args.profile]),
     )
 
     print(f"Wrote {out_path}")

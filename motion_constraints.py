@@ -8,6 +8,7 @@ stabilizing the floating base, and reducing foot slip during contact phases.
 from __future__ import annotations
 
 from dataclasses import dataclass
+from typing import NamedTuple
 
 import mujoco
 import numpy as np
@@ -27,6 +28,13 @@ class OptimizationReport:
     root_xy_change_mean: float
     max_joint_step_before: float
     max_joint_step_after: float
+
+
+class JointProfile(NamedTuple):
+    window: int
+    max_step: float
+    max_acc: float
+    gain: float
 
 
 def joint_addresses(model) -> dict[str, int]:
@@ -107,14 +115,21 @@ def acceleration_limit(values: np.ndarray, max_acc_step: float, passes: int = 2)
     return out
 
 
-def optimize_qpos_offline(model, qpos_init: np.ndarray, fps: float) -> tuple[np.ndarray, dict[str, np.ndarray], OptimizationReport]:
+def optimize_qpos_offline(
+    model,
+    qpos_init: np.ndarray,
+    fps: float,
+    profile: str = "safe",
+) -> tuple[np.ndarray, dict[str, np.ndarray], OptimizationReport]:
     qpos = qpos_init.astype(np.float64).copy()
     before = _max_actuated_step(model, qpos)
     root_xy_before = qpos[:, :2].copy()
     addresses = joint_addresses(model)
 
     _stabilize_root(qpos)
-    _smooth_actuated_joints(model, qpos, addresses)
+    _smooth_actuated_joints(model, qpos, addresses, profile=profile)
+    if profile == "balance":
+        _project_balance_root(qpos)
 
     contacts = detect_foot_contacts(model, qpos, fps)
     for _ in range(3):
@@ -146,33 +161,100 @@ def _stabilize_root(qpos: np.ndarray, light: bool = False) -> None:
     qpos[:, 2] = moving_average(qpos[:, 2], 11 if light else 17)
 
 
-def _smooth_actuated_joints(model, qpos: np.ndarray, addresses: dict[str, int]) -> None:
+def _project_balance_root(qpos: np.ndarray) -> None:
+    """Keep the floating base near a standing root for free-root rollouts."""
+    qpos[:, 0] = qpos[0, 0]
+    qpos[:, 1] = qpos[0, 1]
+    z_center = float(np.mean(qpos[:, 2]))
+    qpos[:, 2] = z_center + 0.15 * (qpos[:, 2] - z_center)
+
+
+def _smooth_actuated_joints(
+    model,
+    qpos: np.ndarray,
+    addresses: dict[str, int],
+    profile: str = "safe",
+) -> None:
     for joint_name, address in addresses.items():
         if address < 7:
             continue
-        window, max_step, max_acc, gain = _joint_profile(joint_name)
+        window, max_step, max_acc, gain = _joint_profile(joint_name, profile=profile)
         values = qpos[:, address] * gain
         values = moving_average(values, window)
         values = acceleration_limit(values, max_acc)
         qpos[:, address] = rate_limit(values, max_step)
 
 
-def _joint_profile(joint_name: str) -> tuple[int, float, float, float]:
-    if "wrist" in joint_name:
-        return 15, 0.055, 0.025, 0.08
-    if "shoulder" in joint_name:
-        return 13, 0.085, 0.035, 0.62
-    if "elbow" in joint_name:
-        return 13, 0.075, 0.030, 0.55
-    if "waist" in joint_name:
-        return 15, 0.060, 0.025, 0.45
-    if "ankle" in joint_name:
-        return 9, 0.080, 0.035, 0.70
-    if "hip" in joint_name:
-        return 9, 0.090, 0.040, 0.75
-    if "knee" in joint_name:
-        return 9, 0.085, 0.040, 0.70
-    return 11, 0.080, 0.035, 0.70
+def _joint_profile(joint_name: str, profile: str = "safe") -> JointProfile:
+    if profile == "safe":
+        if "wrist" in joint_name:
+            return JointProfile(15, 0.055, 0.025, 0.08)
+        if "shoulder" in joint_name:
+            return JointProfile(13, 0.085, 0.035, 0.62)
+        if "elbow" in joint_name:
+            return JointProfile(13, 0.075, 0.030, 0.55)
+        if "waist" in joint_name:
+            return JointProfile(15, 0.060, 0.025, 0.45)
+        if "ankle" in joint_name:
+            return JointProfile(9, 0.080, 0.035, 0.70)
+        if "hip" in joint_name:
+            return JointProfile(9, 0.090, 0.040, 0.75)
+        if "knee" in joint_name:
+            return JointProfile(9, 0.085, 0.040, 0.70)
+        return JointProfile(11, 0.080, 0.035, 0.70)
+
+    if profile == "expressive":
+        if "wrist" in joint_name:
+            return JointProfile(13, 0.060, 0.025, 0.16)
+        if "shoulder" in joint_name:
+            return JointProfile(9, 0.120, 0.050, 0.82)
+        if "elbow" in joint_name:
+            return JointProfile(9, 0.095, 0.040, 0.70)
+        if "waist" in joint_name:
+            return JointProfile(11, 0.075, 0.032, 0.62)
+        if "ankle" in joint_name:
+            return JointProfile(9, 0.085, 0.035, 0.72)
+        if "hip" in joint_name:
+            return JointProfile(9, 0.095, 0.040, 0.78)
+        if "knee" in joint_name:
+            return JointProfile(9, 0.090, 0.040, 0.74)
+        return JointProfile(9, 0.090, 0.035, 0.75)
+
+    if profile == "balance":
+        if "wrist" in joint_name:
+            return JointProfile(15, 0.040, 0.018, 0.06)
+        if "shoulder" in joint_name:
+            return JointProfile(13, 0.050, 0.022, 0.35)
+        if "elbow" in joint_name:
+            return JointProfile(13, 0.050, 0.022, 0.35)
+        if "waist" in joint_name:
+            return JointProfile(15, 0.035, 0.016, 0.08)
+        if "ankle" in joint_name:
+            return JointProfile(15, 0.035, 0.016, 0.05)
+        if "hip" in joint_name:
+            return JointProfile(15, 0.035, 0.016, 0.05)
+        if "knee" in joint_name:
+            return JointProfile(15, 0.035, 0.016, 0.05)
+        return JointProfile(15, 0.040, 0.018, 0.20)
+
+    if profile == "showcase":
+        if "wrist" in joint_name:
+            return JointProfile(9, 0.075, 0.030, 0.22)
+        if "shoulder" in joint_name:
+            return JointProfile(7, 0.135, 0.055, 0.95)
+        if "elbow" in joint_name:
+            return JointProfile(7, 0.110, 0.045, 0.82)
+        if "waist" in joint_name:
+            return JointProfile(9, 0.080, 0.034, 0.50)
+        if "ankle" in joint_name:
+            return JointProfile(11, 0.070, 0.030, 0.45)
+        if "hip" in joint_name:
+            return JointProfile(11, 0.075, 0.032, 0.48)
+        if "knee" in joint_name:
+            return JointProfile(11, 0.075, 0.032, 0.48)
+        return JointProfile(9, 0.085, 0.035, 0.65)
+
+    raise ValueError(f"Unknown constraint profile: {profile}")
 
 
 def _lock_support_feet(model, qpos: np.ndarray, contacts: dict[str, np.ndarray]) -> None:

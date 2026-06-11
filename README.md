@@ -131,6 +131,43 @@ python pd_track.py aist_data/motions/gPO_sFM_cAll_d10_mPO1_ch02.pkl --fps 60 --p
 python evaluate.py aist_data/motions/gPO_sFM_cAll_d10_mPO1_ch02.pkl --wav aist_data/music/mPO1.wav --fps 60
 ```
 
+To inspect how much motion is lost during robot retargeting, first export a
+direct SMPL-to-G1 baseline and then render it next to the original SMPL motion:
+
+```bash
+python export_direct_mapping.py aist_data/motions/gPO_sFM_cAll_d10_mPO1_ch02.pkl --fps 60
+python compare_smpl_to_npz.py \
+  aist_data/motions/gPO_sFM_cAll_d10_mPO1_ch02.pkl \
+  optimized_motions/gPO_sFM_cAll_d10_mPO1_ch02_direct.npz \
+  --fps 60
+```
+
+`optimize_g1_motion.py` also supports constraint profiles for different
+retargeting goals:
+
+```bash
+# Conservative default.
+python optimize_g1_motion.py generated_motions/pop.pkl --fps 30 --profile safe \
+  --out optimized_motions/pop_safe.npz
+
+# Keeps more torso and arm motion for pinned-root demos.
+python optimize_g1_motion.py generated_motions/pop.pkl --fps 30 --profile expressive \
+  --out optimized_motions/pop_expressive.npz
+
+# Favors free-root stability by strongly damping root/lower-body motion.
+python optimize_g1_motion.py generated_motions/pop.pkl --fps 30 --profile balance \
+  --out optimized_motions/pop_balance.npz
+
+# Display-first profile: emphasizes upper-body motion while reducing leg noise.
+python optimize_g1_motion.py generated_motions/pop.pkl --fps 30 --profile showcase \
+  --out optimized_motions/pop_showcase.npz
+python pd_track.py optimized_motions/pop_showcase.npz --fps 30 --pin-root
+```
+
+Use `--pin-root` only for visualization. It overwrites the floating-base state
+with the reference pose so the robot cannot fall; free-root rollouts are the
+physical stability check.
+
 ## Reproducibility notes
 
 - Paths are root-relative through `project_paths.py`; the repo no longer depends
