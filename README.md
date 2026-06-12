@@ -15,6 +15,9 @@ filters, MuJoCo PD tracking, and final quantitative evaluation.
 - `robot_feasibility_optimize.py`: search for a free-root, dynamically feasible
   reference with higher expressiveness than the conservative fallback.
 - `support_com_optimize.py`: final support/COM-aware feasibility optimizer.
+- `contact_balance_optimize.py`: experimental contact-aware PD balance
+  post-processor for turning a pinned/showcase reference into a more stable
+  free-root reference.
 - `pd_track.py`: MuJoCo PD rollout and video rendering.
 - `evaluate.py` and `final_evaluate.py`: beat alignment, joint-limit, stability,
   tracking, and summary plot/CSV generation.
@@ -167,6 +170,57 @@ python pd_track.py optimized_motions/pop_showcase.npz --fps 30 --pin-root
 Use `--pin-root` only for visualization. It overwrites the floating-base state
 with the reference pose so the robot cannot fall; free-root rollouts are the
 physical stability check.
+
+### Experimental contact-aware balance correction
+
+`contact_balance_optimize.py` is a post-processing tool for the common case
+where an expressive or showcase reference looks good with `--pin-root` but falls
+quickly in a free-root MuJoCo rollout. It estimates left/right foot contact
+segments, builds a support-center trajectory, damps risky lower-body/root
+motion, and applies a clipped PD-style correction to the floating-base `xy`
+trajectory.
+
+This tool is meant as a practical display/stability compromise, not a full
+physics controller. It can keep more upper-body motion than the conservative
+`balance` profile, but aggressive dances may still require strong damping.
+
+Example starting from a display-first `showcase` reference:
+
+```bash
+python optimize_g1_motion.py generated_motions/pop.pkl --fps 30 --profile showcase \
+  --out optimized_motions/pop_showcase.npz
+
+python contact_balance_optimize.py optimized_motions/pop_showcase.npz \
+  --out optimized_motions/pop_contact_balance.npz \
+  --root-kp 0.28 --root-kd 0.12 --max-root-step 0.015 \
+  --root-motion-gain 0.10 --leg-gain 0.20 --waist-gain 0.15 \
+  --arm-gain 0.45 --root-z-gain 0.15 --root-roll-pitch-gain 0.03
+
+python pd_track.py optimized_motions/pop_contact_balance.npz --fps 30
+python add_audio.py videos/pop_contact_balance_pd.mp4 pop.wav
+```
+
+For motions with obvious foot sliding inside a contact interval, add
+`--stable-support`. This uses one median support point per contact segment and
+usually reduces root drift:
+
+```bash
+python contact_balance_optimize.py optimized_motions/waack_showcase.npz \
+  --out optimized_motions/waack_contact_balance.npz \
+  --root-kp 0.32 --root-kd 0.14 --max-root-step 0.012 \
+  --root-motion-gain 0.055 --leg-gain 0.11 --waist-gain 0.085 \
+  --arm-gain 0.30 --root-z-gain 0.12 --root-roll-pitch-gain 0.02 \
+  --stable-support
+```
+
+Useful tuning rules:
+
+- Increase `--arm-gain` to keep more visible dance motion.
+- Decrease `--leg-gain`, `--waist-gain`, and `--root-motion-gain` when the
+  free-root rollout falls early.
+- Decrease `--max-root-step` when root movement looks jittery.
+- Use `--stable-support` when foot contact estimates slide with the source
+  motion.
 
 ## Reproducibility notes
 
