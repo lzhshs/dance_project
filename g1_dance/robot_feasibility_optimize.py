@@ -59,7 +59,7 @@ def main() -> None:
     for index, param in enumerate(params, start=1):
         candidate = make_feasible_reference(model, qpos_source, param)
         stats = simulate_feasibility(model, candidate, fps, args.max_seconds)
-        expressiveness = motion_expressiveness(model, candidate, qpos_source)
+        expressiveness = motion_expressiveness(model, candidate, qpos_source, fps)
         score = feasibility_score(stats, expressiveness, args.min_stability)
         results.append((score, expressiveness, param, candidate, stats))
         print(
@@ -236,7 +236,7 @@ def simulate_feasibility(model: mujoco.MjModel, qpos_ref: np.ndarray, fps: float
     }
 
 
-def motion_expressiveness(model: mujoco.MjModel, qpos_ref: np.ndarray, qpos_source: np.ndarray) -> float:
+def motion_expressiveness(model: mujoco.MjModel, qpos_ref: np.ndarray, qpos_source: np.ndarray, fps: float) -> float:
     addresses = joint_addresses(model)
     weights = np.zeros(model.nq, dtype=np.float64)
     for joint_name, address in addresses.items():
@@ -253,7 +253,7 @@ def motion_expressiveness(model: mujoco.MjModel, qpos_ref: np.ndarray, qpos_sour
     active = weights > 0
     source_scale = float(np.mean(np.std(qpos_source[:, active], axis=0) * weights[active])) + 1e-6
     candidate_scale = float(np.mean(np.std(qpos_ref[:, active], axis=0) * weights[active]))
-    velocity_scale = float(np.mean(np.abs(np.diff(qpos_ref[:, active], axis=0))) * 30.0)
+    velocity_scale = float(np.mean(np.abs(np.diff(qpos_ref[:, active], axis=0))) * fps)
     return candidate_scale / source_scale + 0.15 * velocity_scale
 
 

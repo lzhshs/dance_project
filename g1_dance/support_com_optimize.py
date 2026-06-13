@@ -68,7 +68,7 @@ def main() -> None:
         candidate = make_feasible_reference(model, qpos_source, param)
         support = support_metrics(model, candidate, fps)
         rollout = simulate_feasibility(model, candidate, fps, args.max_seconds)
-        expr = motion_expressiveness(model, candidate, qpos_source)
+        expr = motion_expressiveness(model, candidate, qpos_source, fps)
         score = support_com_score(rollout, support, expr, args.min_stability)
         report = CandidateReport(
             params=asdict(param),

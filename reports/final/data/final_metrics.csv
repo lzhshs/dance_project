@@ -1,0 +1,6 @@
+method_id,method_name,source_path,fps,frames,duration_s,stability_rate,fall_time_s,mean_joint_error_rad,max_joint_error_rad,pelvis_z_min_m,pelvis_z_mean_m,motion_amplitude_rad,actual_joint_limit_violation_rate,boundary_joint_limit_proxy_rate,beat_alignment_score,music_beats,motion_beats
+direct_retarget,Direct retarget,generated_motions/pop.pkl,30.0,300,10.0,0.11779999999999999,1.178,0.06807275086835538,0.4806409714424956,0.08413032202868012,0.1872354265641974,0.14115016360504692,0.0,0.006896551724137931,0.6865510083742044,9,62
+offline_filtered,Offline-filtered,optimized_motions/pop_optimized.npz,30.0,300,10.0,0.163,1.6300000000000001,0.013214510038409203,0.047112613582443785,0.057673282592401474,0.19381658976810154,0.07975577310428797,0.0,0.0,,,
+balance_safe,Balance-safe,optimized_motions/pop_balance_safe.npz,30.0,300,10.0,1.0,,0.0033772162801104454,0.012098194546816746,0.7885347784866227,0.7915745192665053,0.01425745265426611,0.0,0.0,,,
+feasibility_optimized,Feasibility-optimized,optimized_motions/pop_feasible.npz,30.0,300,10.0,1.0,,0.00653719994507603,0.024464356321326066,0.787882903574178,0.7914681202238162,0.05162308513337345,0.0,0.0,,,
+support_com,Support/COM-aware,optimized_motions/pop_support_com.npz,30.0,300,10.0,1.0,,0.0075818891616778825,0.02817305644696413,0.7876508953392907,0.791490622160841,0.060590796156480456,0.0,0.0,,,

@@ -137,6 +137,7 @@ def main():
             # cannot fall; joints still follow PD dynamics.
             data.qpos[0:7] = q_ref[0:7]
             data.qvel[0:6] = 0.0
+            mujoco.mj_forward(model, data)
 
         # Tracking error
         for a_i in range(model.nu):

@@ -28,9 +28,9 @@ import matplotlib.pyplot as plt
 import mujoco
 import numpy as np
 
-from g1_dance.evaluate import beat_alignment_score, joint_limit_violation_rate
+from g1_dance.evaluate import beat_alignment_score, joint_limit_boundary_proxy_rate
 from g1_dance.motion_constraints import actuator_qpos_addresses
-from g1_dance.project_paths import GENERATED_MOTIONS_DIR, INPUTS_DIR, OPTIMIZED_MOTIONS_DIR, PROJECT_ROOT
+from g1_dance.project_paths import GENERATED_MOTIONS_DIR, OPTIMIZED_MOTIONS_DIR, POP_WAV, PROJECT_ROOT
 from g1_dance.retarget_smpl_to_g1 import G1_XML, load_motion
 from g1_dance.retarget_v2 import build_qpos_trajectory
 from g1_dance.smpl_fk import fk
@@ -71,7 +71,7 @@ class EvalResult:
 def main() -> None:
     parser = argparse.ArgumentParser(description="Evaluate final G1 dance pipeline outputs")
     parser.add_argument("--motion", default=str(GENERATED_MOTIONS_DIR / "pop.pkl"), help="Source EDGE/SMPL motion .pkl")
-    parser.add_argument("--wav", default=str(INPUTS_DIR / "artifacts/inputs/pop.wav"), help="Music wav for beat alignment")
+    parser.add_argument("--wav", default=str(POP_WAV), help="Music wav for beat alignment")
     parser.add_argument("--fps", type=float, default=30.0, help="Motion/reference FPS")
     parser.add_argument("--max-seconds", type=float, default=10.0)
     parser.add_argument("--outdir", default=str(PROJECT_ROOT / "reports" / "final"))
@@ -90,7 +90,7 @@ def main() -> None:
     poses = trans = None
     if Path(args.motion).exists():
         poses, trans = load_motion(args.motion)
-        joint_proxy = joint_limit_violation_rate(model, poses, trans)
+        joint_proxy = joint_limit_boundary_proxy_rate(model, poses, trans)
         if not args.skip_beat and args.wav and Path(args.wav).exists():
             positions = fk(poses, trans)
             beat_info = beat_alignment_score(positions, args.fps, args.wav)

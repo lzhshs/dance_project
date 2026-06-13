@@ -151,59 +151,40 @@ def physical_stability_rate(model, data, qpos_traj, motion_fps,
     }
 
 
-# ── Joint Limit Violation Rate ────────────────────────────────────────
-def joint_limit_violation_rate(model, poses, trans):
-    """Compute fraction of (frame, joint) entries violating G1 limits.
+# ── Joint-Limit Boundary Proxy ────────────────────────────────────────
+def joint_limit_boundary_proxy_rate(model, poses, trans):
+    """Compute fraction of clamped joint entries that sit on G1 limits.
 
-    This measures violations BEFORE clamping, i.e., how much the raw
-    SMPL retargeting exceeds the robot's physical range.
+    The retargeters clamp joint values before returning qpos trajectories, so
+    this is a boundary proxy rather than a true pre-clamp violation rate.
 
-    Returns (violation_rate, n_violations, n_total).
+    Returns (proxy_rate, n_boundary_entries, n_total).
     """
     from g1_dance.retarget_smpl_to_g1 import smpl_to_g1_qpos
 
-    # Get raw retargeted qpos WITHOUT clamping.
-    # We replicate the retarget but skip the clamp step.
-    # Actually smpl_to_g1_qpos already clamps — so we call the internal
-    # mapping and check before the clamp.
-    data = mujoco.MjData(model)
-    qpos = build_qpos_trajectory(model, data, poses, trans)
-    # build_qpos_trajectory also clamps at the end. We need unclamped.
-    # Re-run without clamp by calling the raw mapping:
     qpos_raw = smpl_to_g1_qpos(model, poses, trans)
-    # smpl_to_g1_qpos clamps too. Let's just check how many entries
-    # differ between raw (before v2 clamp) and the limits.
-    # Actually both functions clamp. The simplest approach: check v1 output
-    # against limits before its own clamp.
-    # Since the code always clamps, let's just re-implement the check here.
     T = poses.shape[0]
-    n_violations = 0
+    n_boundary_entries = 0
     n_total = 0
-
-    # Recompute v1 qpos without clamping by temporarily removing the clamp.
-    # Easier: just check the clamped vs unclamped difference.
-    # Build unclamped by calling smpl_to_g1_qpos and undoing clamp... no.
-    #
-    # Simplest: import the euler decomposition inline and check against limits.
-    from scipy.spatial.transform import Rotation as R
-    adr = {mujoco.mj_id2name(model, mujoco.mjtObj.mjOBJ_JOINT, i):
-           int(model.jnt_qposadr[i]) for i in range(model.njnt)}
 
     for i in range(1, model.njnt):  # skip free joint
         lo, hi = model.jnt_range[i]
         if lo >= hi:
             continue
         a = int(model.jnt_qposadr[i])
-        col = qpos_raw[:, a]  # already clamped, but let's check original
-        # Since we can't get unclamped easily, we check if the clamped value
-        # sits at the limit boundary (meaning it was probably violated).
+        col = qpos_raw[:, a]
         at_lo = np.sum(np.isclose(col, lo, atol=1e-4) & (lo != 0.0))
         at_hi = np.sum(np.isclose(col, hi, atol=1e-4) & (hi != 0.0))
-        n_violations += int(at_lo) + int(at_hi)
+        n_boundary_entries += int(at_lo) + int(at_hi)
         n_total += T
 
-    rate = n_violations / max(n_total, 1)
-    return rate, n_violations, n_total
+    rate = n_boundary_entries / max(n_total, 1)
+    return rate, n_boundary_entries, n_total
+
+
+def joint_limit_violation_rate(model, poses, trans):
+    """Backward-compatible alias for the joint-limit boundary proxy."""
+    return joint_limit_boundary_proxy_rate(model, poses, trans)
 
 
 # ── Main ──────────────────────────────────────────────────────────────
@@ -240,9 +221,9 @@ def main():
         bas = None
         print("\n(Skipping Beat Alignment — no --wav provided)")
 
-    # 2. Joint Limit Violation Rate
-    print("\n─── Joint Limit Violation Rate ───")
-    jlv, n_viol, n_tot = joint_limit_violation_rate(model, poses, trans)
+    # 2. Joint-Limit Boundary Proxy
+    print("\n─── Joint-Limit Boundary Proxy ───")
+    jlv, n_viol, n_tot = joint_limit_boundary_proxy_rate(model, poses, trans)
     print(f"  Rate:       {jlv*100:.2f}%  ({n_viol}/{n_tot})")
 
     # 3. Physical Stability Rate
@@ -265,7 +246,7 @@ def main():
     print(f"  Motion:             {os.path.basename(args.pkl)}")
     if bas is not None:
         print(f"  Beat Alignment:     {bas:.4f}")
-    print(f"  Joint Violation:    {jlv*100:.2f}%")
+    print(f"  Joint Limit Proxy:  {jlv*100:.2f}%")
     print(f"  Stability Rate:     {stats['stability_rate']*100:.1f}%")
     print(f"  Mean Track Error:   {stats['mean_joint_error']:.4f} rad")
 
