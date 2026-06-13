@@ -24,5 +24,10 @@ mujoco_menagerie/*
 !mujoco_menagerie/README.md
 !mujoco_menagerie/unitree_g1/
 !mujoco_menagerie/unitree_g1/**
-aist_data/
-videos/
+artifacts/aist_data/
+artifacts/videos/
+artifacts/optimized_motions/*support_com*.npz
+artifacts/optimized_motions/*showcase*.npz
+artifacts/optimized_motions/jazz*.npz
+artifacts/optimized_motions/break*.npz
+reports/final/

@@ -13,8 +13,8 @@ from pathlib import Path
 import mujoco
 import numpy as np
 
-from project_paths import G1_XML, OPTIMIZED_MOTIONS_DIR
-from retarget_smpl_to_g1 import load_motion, smpl_to_g1_qpos
+from g1_dance.project_paths import G1_XML, OPTIMIZED_MOTIONS_DIR
+from g1_dance.retarget_smpl_to_g1 import load_motion, smpl_to_g1_qpos
 
 
 def save_direct_reference(

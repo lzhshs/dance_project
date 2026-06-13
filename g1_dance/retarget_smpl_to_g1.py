@@ -43,7 +43,7 @@ import mujoco
 import imageio.v2 as imageio
 from scipy.spatial.transform import Rotation as R
 
-from project_paths import AIST_MOTIONS_DIR, G1_XML, VIDEOS_DIR
+from g1_dance.project_paths import AIST_MOTIONS_DIR, G1_XML, VIDEOS_DIR
 
 DEFAULT_PKL = str(AIST_MOTIONS_DIR / "gBR_sBM_cAll_d04_mBR0_ch01.pkl")
 OUT_DIR = str(VIDEOS_DIR)

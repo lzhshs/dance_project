@@ -20,10 +20,10 @@ import mujoco
 import numpy as np
 from scipy.spatial.transform import Rotation as R
 
-from retarget_smpl_to_g1 import G1_XML, load_motion
-from smpl_fk import fk
+from g1_dance.retarget_smpl_to_g1 import G1_XML, load_motion
+from g1_dance.smpl_fk import fk
 
-from project_paths import AIST_MOTIONS_DIR, VIDEOS_DIR
+from g1_dance.project_paths import AIST_MOTIONS_DIR, VIDEOS_DIR
 
 OUT_DIR = str(VIDEOS_DIR)
 os.makedirs(OUT_DIR, exist_ok=True)
@@ -121,7 +121,7 @@ def solve_arm_ik(target_local: np.ndarray):
 
 def build_qpos_trajectory(model, data, poses, trans):
     """Return (T, nq) qpos trajectory for G1 using v1 for lower body + IK for arms."""
-    from retarget_smpl_to_g1 import smpl_to_g1_qpos
+    from g1_dance.retarget_smpl_to_g1 import smpl_to_g1_qpos
     T = poses.shape[0]
 
     # Start from v1 retargeting (lower body correct, arms approximate).
@@ -227,7 +227,7 @@ def main():
             fps = int(a.split("=", 1)[1])
     pkl = args[0] if args else \
         str(AIST_MOTIONS_DIR / "gPO_sFM_cAll_d10_mPO1_ch02.pkl")
-    # Heuristic: EDGE pkls live in generated_motions/ and are 30 fps.
+    # Heuristic: EDGE pkls live in artifacts/generated_motions/ and are 30 fps.
     if "generated_motions" in pkl and "--fps=" not in " ".join(sys.argv):
         fps = 30
     stem = os.path.splitext(os.path.basename(pkl))[0]

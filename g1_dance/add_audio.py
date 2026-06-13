@@ -1,8 +1,8 @@
 """Mux an AIST++ music file onto a rendered MuJoCo video.
 
-Usage: python add_audio.py <video.mp4> [music.wav]
+Usage: python -m g1_dance.add_audio <video.mp4> [music.wav]
 If music.wav is omitted, parses music_id (e.g. mJB5) from the filename and
-looks up the corresponding wav in aist_data/music/. Output: <video>_audio.mp4
+looks up the corresponding wav in artifacts/aist_data/music/. Output: <video>_audio.mp4
 next to the input.
 """
 import os
@@ -13,7 +13,7 @@ import sys
 import imageio_ffmpeg
 
 FFMPEG = imageio_ffmpeg.get_ffmpeg_exe()
-from project_paths import AIST_MUSIC_DIR
+from g1_dance.project_paths import AIST_MUSIC_DIR
 
 MUSIC_DIR = str(AIST_MUSIC_DIR)
 

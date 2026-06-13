@@ -13,11 +13,11 @@ import os
 import mujoco
 import numpy as np
 
-from retarget_smpl_to_g1 import G1_XML
-from rollout_optimize import make_candidate, score_stats, simulate_candidate
+from g1_dance.retarget_smpl_to_g1 import G1_XML
+from g1_dance.rollout_optimize import make_candidate, score_stats, simulate_candidate
 
 
-from project_paths import OPTIMIZED_MOTIONS_DIR
+from g1_dance.project_paths import OPTIMIZED_MOTIONS_DIR
 
 OUT_DIR = str(OPTIMIZED_MOTIONS_DIR)
 

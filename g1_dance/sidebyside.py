@@ -1,7 +1,7 @@
 """Side-by-side comparison: SMPL original skeleton (left) vs G1 retargeted (right).
 
-Usage: python sidebyside.py <motion.pkl>
-Output: videos/<stem>_compare.mp4 (+ _compare_audio.mp4 with music)
+Usage: python -m g1_dance.sidebyside <motion.pkl>
+Output: artifacts/videos/<stem>_compare.mp4 (+ _compare_audio.mp4 with music)
 """
 import os
 import sys
@@ -14,10 +14,10 @@ import mujoco
 import numpy as np
 from mpl_toolkits.mplot3d import Axes3D  # noqa: F401
 
-from retarget_smpl_to_g1 import G1_XML, load_motion, smpl_to_g1_qpos
-from smpl_fk import EDGES, fk
+from g1_dance.retarget_smpl_to_g1 import G1_XML, load_motion, smpl_to_g1_qpos
+from g1_dance.smpl_fk import EDGES, fk
 
-from project_paths import VIDEOS_DIR
+from g1_dance.project_paths import VIDEOS_DIR
 
 OUT_DIR = str(VIDEOS_DIR)
 os.makedirs(OUT_DIR, exist_ok=True)

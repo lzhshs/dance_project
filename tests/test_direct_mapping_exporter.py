@@ -5,7 +5,7 @@ import numpy as np
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(__file__)))
 
-from export_direct_mapping import save_direct_reference
+from g1_dance.export_direct_mapping import save_direct_reference
 
 
 def test_save_direct_reference_writes_expected_npz_fields(tmp_path):

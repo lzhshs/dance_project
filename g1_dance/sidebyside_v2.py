@@ -10,12 +10,12 @@ import mujoco
 import numpy as np
 from mpl_toolkits.mplot3d import Axes3D  # noqa: F401
 
-from retarget_smpl_to_g1 import G1_XML, load_motion
-from retarget_v2 import build_qpos_trajectory
-from smpl_fk import EDGES, fk
-from sidebyside import render_smpl_frame
+from g1_dance.retarget_smpl_to_g1 import G1_XML, load_motion
+from g1_dance.retarget_v2 import build_qpos_trajectory
+from g1_dance.smpl_fk import EDGES, fk
+from g1_dance.sidebyside import render_smpl_frame
 
-from project_paths import VIDEOS_DIR
+from g1_dance.project_paths import VIDEOS_DIR
 
 OUT_DIR = str(VIDEOS_DIR)
 W = H = 480

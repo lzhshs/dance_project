@@ -6,10 +6,10 @@ reference joint targets from the retargeted trajectory, then let MuJoCo step
 with full rigid-body dynamics + ground contacts.
 
 Outputs:
-  - videos/<stem>_pd.mp4  : rendered physics simulation
+  - artifacts/videos/<stem>_pd.mp4  : rendered physics simulation
   - prints tracking stats (mean/max joint error, fall rate, falls at time)
 
-Usage: python pd_track.py <motion.pkl|optimized.npz> [--pin-root]
+Usage: python -m g1_dance.pd_track <motion.pkl|optimized.npz> [--pin-root]
        --pin-root  Overwrite floating-base qpos/qvel each step from the
                    reference trajectory, isolating joint tracking from the
                    balance problem.
@@ -22,10 +22,10 @@ import imageio.v2 as imageio
 import mujoco
 import numpy as np
 
-from retarget_smpl_to_g1 import G1_XML, load_motion
-from retarget_v2 import build_qpos_trajectory
+from g1_dance.retarget_smpl_to_g1 import G1_XML, load_motion
+from g1_dance.retarget_v2 import build_qpos_trajectory
 
-from project_paths import AIST_MOTIONS_DIR, VIDEOS_DIR
+from g1_dance.project_paths import AIST_MOTIONS_DIR, VIDEOS_DIR
 
 OUT_DIR = str(VIDEOS_DIR)
 os.makedirs(OUT_DIR, exist_ok=True)

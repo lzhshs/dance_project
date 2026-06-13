@@ -3,7 +3,7 @@ import sys
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(__file__)))
 
-from optimize_g1_motion import build_parser
+from g1_dance.optimize_g1_motion import build_parser
 
 
 def test_parser_accepts_expressive_constraint_profile():

@@ -5,7 +5,7 @@ import numpy as np
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(__file__)))
 
-from contact_balance_optimize import (
+from g1_dance.contact_balance_optimize import (
     compute_segment_median_support_centers,
     compute_support_centers,
     limit_root_motion,

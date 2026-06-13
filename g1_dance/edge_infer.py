@@ -3,7 +3,7 @@
 Workflow:
   1. Extract Jukebox features for your .wav on a GPU box (Colab notebook:
      colab_extract_jukebox.ipynb). You'll get a folder like
-       cached_features/<song>/
+       artifacts/cached_features/<song>/
            <song>_slice0.wav
            <song>_slice0.npy
            <song>_slice1.wav
@@ -11,12 +11,12 @@ Workflow:
      Each .npy is a (150, 4800) Jukebox feature array.
   2. Download that folder to `EDGE/cached_features/<song>/` on this Mac.
   3. Run:
-       python edge_infer.py <song>
+       python -m g1_dance.edge_infer <song>
      This loads the features, runs the 50M-param EDGE diffusion on MPS,
-     and writes an EDGE-style SMPL .pkl into `generated_motions/<song>.pkl`.
+     and writes an EDGE-style SMPL .pkl into `artifacts/generated_motions/<song>.pkl`.
   4. Feed into our retarget+PD pipeline:
-       python retarget_v2.py generated_motions/<song>.pkl
-       python pd_track.py  generated_motions/<song>.pkl --pin-root
+       python -m g1_dance.retarget_v2 artifacts/generated_motions/<song>.pkl
+       python -m g1_dance.pd_track  artifacts/generated_motions/<song>.pkl --pin-root
 """
 import glob
 import argparse
@@ -35,11 +35,12 @@ import numpy as np
 import torch
 from scipy.spatial.transform import Rotation as R
 
-from project_paths import EDGE_DIR, GENERATED_MOTIONS_DIR, PROJECT_ROOT
+from g1_dance.project_paths import CACHED_FEATURES_DIR, EDGE_DIR, GENERATED_MOTIONS_DIR, PROJECT_ROOT
 
 EDGE_DIR = str(EDGE_DIR)
 OUT_DIR = str(GENERATED_MOTIONS_DIR)
 os.environ.setdefault("MPLCONFIGDIR", os.path.join(tempfile.gettempdir(), "matplotlib_cache"))
+sys.path.insert(0, str(PROJECT_ROOT / "vendor"))
 sys.path.insert(0, EDGE_DIR)
 
 from EDGE import EDGE  # noqa: E402
@@ -72,7 +73,7 @@ SORT_KEY = cmp_to_key(_cmp)
 
 def main():
     parser = argparse.ArgumentParser(description="Run local EDGE inference from cached Jukebox features")
-    parser.add_argument("song_name", help="Folder name under cached_features/ or EDGE/cached_features/")
+    parser.add_argument("song_name", help="Folder name under artifacts/cached_features/ or EDGE/cached_features/")
     parser.add_argument("--seed", type=int, default=7, help="Random seed for diffusion sampling")
     args = parser.parse_args()
 
@@ -85,7 +86,7 @@ def main():
     song = args.song_name
     feat_dir = os.path.join(EDGE_DIR, "cached_features", song)
     if not os.path.isdir(feat_dir):
-        feat_dir = os.path.join(PROJECT_ROOT, "cached_features", song)
+        feat_dir = os.path.join(CACHED_FEATURES_DIR, song)
     if not os.path.isdir(feat_dir):
         print(f"No such dir: {feat_dir}")
         sys.exit(1)

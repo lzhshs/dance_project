@@ -3,7 +3,7 @@ import pickle
 import numpy as np
 import sys
 
-from project_paths import AIST_MOTIONS_DIR
+from g1_dance.project_paths import AIST_MOTIONS_DIR
 
 path = sys.argv[1] if len(sys.argv) > 1 else \
     str(AIST_MOTIONS_DIR / "gBR_sBM_cAll_d04_mBR0_ch01.pkl")

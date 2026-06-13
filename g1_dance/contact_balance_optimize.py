@@ -16,7 +16,7 @@ import mujoco
 import numpy as np
 from scipy.spatial.transform import Rotation as R
 
-from motion_constraints import (
+from g1_dance.motion_constraints import (
     LEFT_FOOT_BODY,
     RIGHT_FOOT_BODY,
     body_positions,
@@ -25,7 +25,7 @@ from motion_constraints import (
     moving_average,
     rate_limit,
 )
-from project_paths import G1_XML, OPTIMIZED_MOTIONS_DIR
+from g1_dance.project_paths import G1_XML, OPTIMIZED_MOTIONS_DIR
 
 
 def compute_support_centers(

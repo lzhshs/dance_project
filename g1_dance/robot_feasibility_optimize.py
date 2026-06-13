@@ -16,12 +16,12 @@ import mujoco
 import numpy as np
 from scipy.spatial.transform import Rotation as R
 
-from motion_constraints import actuator_qpos_addresses, joint_addresses, moving_average, rate_limit
-from retarget_smpl_to_g1 import G1_XML
-from rollout_optimize import FALL_PELVIS_Z, interp_qpos
+from g1_dance.motion_constraints import actuator_qpos_addresses, joint_addresses, moving_average, rate_limit
+from g1_dance.retarget_smpl_to_g1 import G1_XML
+from g1_dance.rollout_optimize import FALL_PELVIS_Z, interp_qpos
 
 
-from project_paths import OPTIMIZED_MOTIONS_DIR
+from g1_dance.project_paths import OPTIMIZED_MOTIONS_DIR
 
 OUT_DIR = str(OPTIMIZED_MOTIONS_DIR)
 

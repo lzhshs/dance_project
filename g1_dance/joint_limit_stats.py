@@ -6,7 +6,7 @@ compare against jnt_range. Reports: violation rate per joint + total.
 import sys
 import numpy as np
 import mujoco
-from retarget_smpl_to_g1 import G1_XML, load_motion, smpl_to_g1_qpos
+from g1_dance.retarget_smpl_to_g1 import G1_XML, load_motion, smpl_to_g1_qpos
 
 pkl = sys.argv[1]
 model = mujoco.MjModel.from_xml_path(G1_XML)

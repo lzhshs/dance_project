@@ -3,7 +3,7 @@ import sys
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(__file__)))
 
-from motion_constraints import _joint_profile
+from g1_dance.motion_constraints import _joint_profile
 
 
 def test_expressive_profile_preserves_more_upper_body_motion_than_safe_profile():

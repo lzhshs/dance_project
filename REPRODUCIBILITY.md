@@ -27,12 +27,12 @@ need bit-for-bit comparison, install the exact versions above where possible.
 For the included `pop` reproduction:
 
 ```text
-generated_motions/pop.pkl
-optimized_motions/pop_optimized.npz
-optimized_motions/pop_balance_safe.npz
-optimized_motions/pop_feasible.npz
-optimized_motions/pop_support_com.npz
-pop.wav
+artifacts/generated_motions/pop.pkl
+artifacts/optimized_motions/pop_optimized.npz
+artifacts/optimized_motions/pop_balance_safe.npz
+artifacts/optimized_motions/pop_feasible.npz
+artifacts/optimized_motions/pop_support_com.npz
+artifacts/inputs/pop.wav
 mujoco_menagerie/unitree_g1/scene.xml
 ```
 
@@ -40,12 +40,12 @@ For end-to-end generation from audio features, also prepare:
 
 ```text
 EDGE/checkpoint.pt
-cached_features/pop/pop_slice0.wav
-cached_features/pop/pop_slice0.npy
-cached_features/pop/pop_slice1.wav
-cached_features/pop/pop_slice1.npy
-cached_features/pop/pop_slice2.wav
-cached_features/pop/pop_slice2.npy
+artifacts/cached_features/pop/pop_slice0.wav
+artifacts/cached_features/pop/pop_slice0.npy
+artifacts/cached_features/pop/pop_slice1.wav
+artifacts/cached_features/pop/pop_slice1.npy
+artifacts/cached_features/pop/pop_slice2.wav
+artifacts/cached_features/pop/pop_slice2.npy
 ```
 
 `edge_infer.py` also accepts the feature folder at `EDGE/cached_features/pop/`.
@@ -53,7 +53,7 @@ cached_features/pop/pop_slice2.npy
 ## Exact final evaluation command
 
 ```bash
-python final_evaluate.py --motion generated_motions/pop.pkl --wav pop.wav --fps 30 --max-seconds 10
+python -m g1_dance.final_evaluate --motion artifacts/generated_motions/pop.pkl --wav artifacts/inputs/pop.wav --fps 30 --max-seconds 10
 ```
 
 This writes:
@@ -81,46 +81,46 @@ Small numeric drift is expected across MuJoCo/Python versions. The qualitative
 check is that the first two rows fall early and the final three remain stable for
 10 seconds.
 
-## Rebuild artifacts from `generated_motions/pop.pkl`
+## Rebuild artifacts from `artifacts/generated_motions/pop.pkl`
 
 Use this when you want to regenerate `.npz` references before evaluation:
 
 ```bash
-python optimize_g1_motion.py generated_motions/pop.pkl --fps 30 --out optimized_motions/pop_optimized.npz
-python make_balance_safe.py optimized_motions/pop_optimized.npz --out optimized_motions/pop_balance_safe.npz
-python robot_feasibility_optimize.py optimized_motions/pop_optimized.npz --out optimized_motions/pop_feasible.npz --samples 90 --seed 7 --max-seconds 10
-python support_com_optimize.py optimized_motions/pop_optimized.npz --out optimized_motions/pop_support_com.npz --samples 160 --seed 11 --max-seconds 10
-python final_evaluate.py --motion generated_motions/pop.pkl --wav pop.wav --fps 30 --max-seconds 10
+python -m g1_dance.optimize_g1_motion artifacts/generated_motions/pop.pkl --fps 30 --out artifacts/optimized_motions/pop_optimized.npz
+python -m g1_dance.make_balance_safe artifacts/optimized_motions/pop_optimized.npz --out artifacts/optimized_motions/pop_balance_safe.npz
+python -m g1_dance.robot_feasibility_optimize artifacts/optimized_motions/pop_optimized.npz --out artifacts/optimized_motions/pop_feasible.npz --samples 90 --seed 7 --max-seconds 10
+python -m g1_dance.support_com_optimize artifacts/optimized_motions/pop_optimized.npz --out artifacts/optimized_motions/pop_support_com.npz --samples 160 --seed 11 --max-seconds 10
+python -m g1_dance.final_evaluate --motion artifacts/generated_motions/pop.pkl --wav artifacts/inputs/pop.wav --fps 30 --max-seconds 10
 ```
 
 ## Render videos
 
 ```bash
-python pd_track.py generated_motions/pop.pkl --fps 30 --pin-root
-python pd_track.py optimized_motions/pop_optimized.npz
-python pd_track.py optimized_motions/pop_balance_safe.npz
-python pd_track.py optimized_motions/pop_feasible.npz
-python pd_track.py optimized_motions/pop_support_com.npz
-python add_audio.py videos/pop_support_com_pd.mp4 pop.wav
+python -m g1_dance.pd_track artifacts/generated_motions/pop.pkl --fps 30 --pin-root
+python -m g1_dance.pd_track artifacts/optimized_motions/pop_optimized.npz
+python -m g1_dance.pd_track artifacts/optimized_motions/pop_balance_safe.npz
+python -m g1_dance.pd_track artifacts/optimized_motions/pop_feasible.npz
+python -m g1_dance.pd_track artifacts/optimized_motions/pop_support_com.npz
+python -m g1_dance.add_audio artifacts/videos/pop_support_com_pd.mp4 artifacts/inputs/pop.wav
 ```
 
 If rendering fails on a headless machine, run with an explicit MuJoCo GL backend,
 for example:
 
 ```bash
-MUJOCO_GL=egl python pd_track.py optimized_motions/pop_support_com.npz
+MUJOCO_GL=egl python -m g1_dance.pd_track artifacts/optimized_motions/pop_support_com.npz
 ```
 
 ## Full regeneration from cached Jukebox features
 
 ```bash
-python edge_infer.py pop --seed 7
-python optimize_g1_motion.py generated_motions/pop.pkl --fps 30
-python make_balance_safe.py optimized_motions/pop_optimized.npz
-python robot_feasibility_optimize.py optimized_motions/pop_optimized.npz --samples 90 --seed 7 --max-seconds 10
-python support_com_optimize.py optimized_motions/pop_optimized.npz --samples 160 --seed 11 --max-seconds 10
-python final_evaluate.py --motion generated_motions/pop.pkl --wav pop.wav --fps 30 --max-seconds 10
+python -m g1_dance.edge_infer pop --seed 7
+python -m g1_dance.optimize_g1_motion artifacts/generated_motions/pop.pkl --fps 30
+python -m g1_dance.make_balance_safe artifacts/optimized_motions/pop_optimized.npz
+python -m g1_dance.robot_feasibility_optimize artifacts/optimized_motions/pop_optimized.npz --samples 90 --seed 7 --max-seconds 10
+python -m g1_dance.support_com_optimize artifacts/optimized_motions/pop_optimized.npz --samples 160 --seed 11 --max-seconds 10
+python -m g1_dance.final_evaluate --motion artifacts/generated_motions/pop.pkl --wav artifacts/inputs/pop.wav --fps 30 --max-seconds 10
 ```
 
 EDGE diffusion sampling can still vary slightly between hardware backends. For
-paper/report reproduction, prefer the checked `generated_motions/pop.pkl`.
+paper/report reproduction, prefer the checked `artifacts/generated_motions/pop.pkl`.

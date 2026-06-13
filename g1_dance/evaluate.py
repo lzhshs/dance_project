@@ -8,7 +8,7 @@ Metrics (from proposal):
      exceed the robot's joint limits before clamping.
 
 Usage:
-  python evaluate.py <motion.pkl> [--wav <music.wav>] [--all-aist]
+  python -m g1_dance.evaluate <motion.pkl> [--wav <music.wav>] [--all-aist]
 
 If --wav is given, Beat Alignment Score is computed.
 Physical stability and joint-limit violations are always computed.
@@ -20,9 +20,9 @@ import sys
 import mujoco
 import numpy as np
 
-from retarget_smpl_to_g1 import G1_XML, load_motion
-from retarget_v2 import build_qpos_trajectory
-from smpl_fk import fk
+from g1_dance.retarget_smpl_to_g1 import G1_XML, load_motion
+from g1_dance.retarget_v2 import build_qpos_trajectory
+from g1_dance.smpl_fk import fk
 
 MOTION_FPS = 30.0  # default for EDGE; override with --fps
 
@@ -160,7 +160,7 @@ def joint_limit_violation_rate(model, poses, trans):
 
     Returns (violation_rate, n_violations, n_total).
     """
-    from retarget_smpl_to_g1 import smpl_to_g1_qpos
+    from g1_dance.retarget_smpl_to_g1 import smpl_to_g1_qpos
 
     # Get raw retargeted qpos WITHOUT clamping.
     # We replicate the retarget but skip the clamp step.

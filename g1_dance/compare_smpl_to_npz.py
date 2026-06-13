@@ -8,10 +8,10 @@ import imageio.v2 as imageio
 import mujoco
 import numpy as np
 
-from project_paths import G1_XML, VIDEOS_DIR
-from retarget_smpl_to_g1 import load_motion
-from sidebyside import render_smpl_frame
-from smpl_fk import fk
+from g1_dance.project_paths import G1_XML, VIDEOS_DIR
+from g1_dance.retarget_smpl_to_g1 import load_motion
+from g1_dance.sidebyside import render_smpl_frame
+from g1_dance.smpl_fk import fk
 
 
 W = H = 480

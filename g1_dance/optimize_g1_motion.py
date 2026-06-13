@@ -12,12 +12,12 @@ import os
 import mujoco
 import numpy as np
 
-from motion_constraints import optimize_qpos_offline
-from retarget_smpl_to_g1 import G1_XML, load_motion
-from retarget_v2 import build_qpos_trajectory
+from g1_dance.motion_constraints import optimize_qpos_offline
+from g1_dance.retarget_smpl_to_g1 import G1_XML, load_motion
+from g1_dance.retarget_v2 import build_qpos_trajectory
 
 
-from project_paths import OPTIMIZED_MOTIONS_DIR
+from g1_dance.project_paths import OPTIMIZED_MOTIONS_DIR
 
 OUT_DIR = str(OPTIMIZED_MOTIONS_DIR)
 
