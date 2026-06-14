@@ -113,7 +113,7 @@ Support/COM-aware & 100.0\% & none & 0.0076 & 0.788 & 0.0606 \\
 \begin{figure}[t]
 \centering
 \includegraphics[width=\linewidth]{figures/final_stability_curve.pdf}
-\caption{Pelvis height over time in unpinned MuJoCo rollouts. Direct retargeting and offline filtering fall early, while the conservative and optimized references remain above the fall threshold for the full rollout.}
+\caption{Pelvis height over time in unpinned MuJoCo rollouts. Direct retargeting and offline filtering fall early, while the conservative and optimized references remain above the fall threshold for the full rollout. The inset zooms the stable-reference region because the three stable curves nearly overlap around 0.79 m in the main plot.}
 \label{fig:stability}
 \end{figure}
 
@@ -153,6 +153,13 @@ The remaining limitation is that the best unpinned simulation-stable motions are
 
 \section{Conclusion}
 This project implemented a working reference-level music-to-humanoid dance retargeting pipeline for Unitree G1 in MuJoCo. The experiments show that music-generated human dance is not directly simulation-stable for this floating-base humanoid setup: direct retargeting and offline filtering both fall quickly. By adding robot-specific constraints, rollout-based feasibility search, and support/COM-aware selection, the final system produces a 10-second free-root pop reference that is stable under the chosen MuJoCo model and PD controller, while preserving substantially more motion than a conservative stable baseline. The final contribution is therefore a physics-aware bridge between generative human dance and humanoid robot simulation, together with a quantitative analysis of the stability--expressiveness trade-off.
+
+\section*{Author Contributions}
+Zehui Liu led the overall system design and the main technical implementation of the project. Zehui implemented and integrated the music-conditioned G1 dance retargeting pipeline, including EDGE/SMPL motion processing, SMPL-to-G1 retargeting, MuJoCo PD rollout evaluation, offline physical constraints, balance-safe reference generation, rollout-based feasibility optimization, support/COM-aware selection, and the final evaluation scripts. Zehui also designed and executed the main Pop experiment and the supplemental Jazz/Ballet-Jazz and Break stress checks, generated and verified the final quantitative metrics, organized the final project structure, and prepared the final report package with figures, tables, references, selected videos, and code-polishing revisions.
+
+Sijie Chen contributed to the repository setup and early project organization, and helped develop supporting components around the retargeting and evaluation workflow. Sijie's contributions included retargeting profile refinements, SMPL-to-reference comparison tools, contact-aware balance correction, presentation-oriented deliverables, curated comparison videos, and speaker-note materials. Sijie also contributed to qualitative demonstration design, especially the comparison between pinned-root visual showcases and free-root physical rollouts, and helped edit the report and presentation materials.
+
+Both team members jointly contributed to the final problem formulation, experiment design, result interpretation, and final presentation narrative. In particular, both members discussed the stability--expressiveness trade-off, compared direct retargeting, offline filtering, conservative stable references, feasibility optimization, and support/COM-aware optimization, analyzed failure cases, and revised the final report to clearly separate nonphysical pinned-root visual references from free-root simulation-stability claims.
 
 \bibliographystyle{plainnat}
 \bibliography{references}

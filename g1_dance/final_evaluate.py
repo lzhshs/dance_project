@@ -25,6 +25,7 @@ os.environ.setdefault("MPLCONFIGDIR", "/tmp/matplotlib_cache")
 import matplotlib
 matplotlib.use("Agg")
 import matplotlib.pyplot as plt
+from mpl_toolkits.axes_grid1.inset_locator import inset_axes, mark_inset
 import mujoco
 import numpy as np
 
@@ -263,22 +264,67 @@ def write_stability_plot(path_stem: Path, curves: dict[str, tuple[np.ndarray, np
         "Feasibility-optimized": "#2ca02c",
         "Support/COM-aware": "#ff7f0e",
     }
-    plt.figure(figsize=(6.4, 3.2))
+    styles = {
+        "Direct retarget": "-",
+        "Offline-filtered": "-",
+        "Balance-safe": "--",
+        "Feasibility-optimized": "-.",
+        "Support/COM-aware": "-",
+    }
+    stable_labels = {"Balance-safe", "Feasibility-optimized", "Support/COM-aware"}
+
+    fig, ax = plt.subplots(figsize=(6.4, 3.2))
     for label, (times, heights, fall_time) in curves.items():
-        plt.plot(times, heights, label=label, linewidth=1.6, color=colors.get(label))
+        ax.plot(
+            times,
+            heights,
+            label=label,
+            linewidth=1.8 if label in stable_labels else 1.6,
+            linestyle=styles.get(label, "-"),
+            color=colors.get(label),
+        )
         if fall_time is not None:
-            plt.axvline(fall_time, color=colors.get(label), linestyle=":", linewidth=1.1, alpha=0.75)
-    plt.axhline(FALL_PELVIS_Z, color="black", linestyle="--", linewidth=1.0, label="Fall threshold")
-    plt.xlabel("Time (s)")
-    plt.ylabel("Pelvis height (m)")
-    plt.xlim(0, 10)
-    plt.ylim(0, 0.95)
-    plt.grid(True, alpha=0.25)
-    plt.legend(fontsize=8, loc="lower right")
-    plt.tight_layout()
-    plt.savefig(path_stem.with_suffix(".pdf"))
-    plt.savefig(path_stem.with_suffix(".png"), dpi=220)
-    plt.close()
+            ax.axvline(fall_time, color=colors.get(label), linestyle=":", linewidth=1.1, alpha=0.75)
+    ax.axhline(FALL_PELVIS_Z, color="black", linestyle="--", linewidth=1.0, label="Fall threshold")
+    ax.set_xlabel("Time (s)")
+    ax.set_ylabel("Pelvis height (m)")
+    ax.set_xlim(0, 10)
+    ax.set_ylim(0, 0.95)
+    ax.grid(True, alpha=0.25)
+    ax.legend(fontsize=8, loc="lower right")
+
+    # The stable references nearly overlap in the main axis; zoom them so the
+    # legend does not imply missing curves.
+    axins = inset_axes(ax, width="43%", height="35%", loc="upper right", borderpad=1.0)
+    stable_heights = []
+    for label in ["Balance-safe", "Feasibility-optimized", "Support/COM-aware"]:
+        if label not in curves:
+            continue
+        times, heights, _ = curves[label]
+        zoom_mask = times >= 0.5
+        stable_heights.append(heights[zoom_mask])
+        axins.plot(
+            times,
+            heights,
+            linewidth=1.7,
+            linestyle=styles.get(label, "-"),
+            color=colors.get(label),
+        )
+    axins.set_xlim(0.5, 10)
+    if stable_heights:
+        stacked = np.concatenate(stable_heights)
+        center = float(np.median(stacked))
+        span = max(float(np.ptp(stacked)) * 1.8, 0.0018)
+        axins.set_ylim(center - span / 2.0, center + span / 2.0)
+    axins.set_title("Stable refs zoom", fontsize=7, pad=1)
+    axins.tick_params(labelsize=6)
+    axins.grid(True, alpha=0.2)
+    mark_inset(ax, axins, loc1=2, loc2=4, fc="none", ec="0.5", alpha=0.45, linewidth=0.8)
+
+    fig.tight_layout()
+    fig.savefig(path_stem.with_suffix(".pdf"))
+    fig.savefig(path_stem.with_suffix(".png"), dpi=220)
+    plt.close(fig)
 
 
 def write_markdown_summary(path: Path, results: list[EvalResult], plot_path: Path) -> None:
